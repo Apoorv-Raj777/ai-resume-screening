@@ -16,13 +16,23 @@ SKILLS_DB = [
     "git", "docker", "kubernetes"
 ]
 
+def normalize_text(text):
+    """
+    Normalize text for better matching:
+    - Lowercase
+    - Remove dots (node.js → nodejs)
+    """
+    return text.lower().replace(".", "")
+
 def extract_skills_from_text(text):
-    text = text.lower()
+    normalized_text = normalize_text(text)
     found_skills = []
 
     for skill in SKILLS_DB:
-        if skill in text:
-            found_skills.append(skill)
+        normalized_skill = normalize_text(skill)
+
+        if normalized_skill in normalized_text:
+            found_skills.append(skill)  # keep original skill name
 
     return set(found_skills)
 
@@ -34,6 +44,6 @@ def skill_gap_analysis(resume_text, jd_text):
     missing = jd_skills - resume_skills
 
     return {
-        "matched": list(matched),
-        "missing": list(missing)
+        "matched": sorted(list(matched)),
+        "missing": sorted(list(missing))
     }
