@@ -2,6 +2,11 @@ from fastapi import FastAPI, UploadFile, File
 import shutil
 import os
 
+from ranker import rank_resumes
+from fastapi import UploadFile, File, Form
+from typing import List
+
+from fastapi import Request
 
 from matcher import calculate_similarity
 from fastapi import Form
@@ -70,4 +75,25 @@ async def match_resume_jd(
        "ats_score": round(score, 2),
        "matched_skills": analysis["matched"],
        "missing_skills": analysis["missing"]
+    }
+    
+@app.post("/rank")
+async def rank_candidates(
+    resumes: list[UploadFile] = File(...),   # 👈 CHANGE HERE
+    job_description: str = Form(...)
+):
+    file_paths = []
+
+    for file in resumes:
+        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        file_paths.append(file_path)
+
+    ranked_results = rank_resumes(file_paths, job_description)
+
+    return {
+        "ranked_candidates": ranked_results
     }
